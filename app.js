@@ -4,12 +4,14 @@ const socketio = require("socket.io");
 const db = require("./db");
 const path = require("path");
 
+
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
+const io = socketio(server); // ✅ ใช้ HTTP Server สร้าง WebSocket Server
 
 const PORT = process.env.PORT || 3000;
 
+// ✅ ตั้งค่า Express สำหรับรับ JSON และเรียกใช้งานไฟล์ส่วนตัว
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -30,19 +32,23 @@ app.post("/api/messages", (req, res) => {
 
     const { username, message } = req.body;
 
-    if (!username || !message) {
-        console.error("❌ Missing username or message");
-        return res.status(400).json({ error: "Username and message are required" });
+    // ✅ ตรวจสอบข้อมูลที่ส่งมา
+    if (!username || !message) { 
+        console.error("❌ Missing username or message"); 
+        return res.status(400).json({ error: "Username and message are required" }); // ส่งข้อความแจ้งเตือนว่าข้อมูลไม่ครบ
     }
 
+    // ✅ ตรวจสอบว่ามี User นี้ในระบบหรือยัง
     db.query("SELECT id FROM users WHERE username = ?", [username], (err, result) => {
         if (err) {
             console.error("❌ Database Error (Checking user):", err);
             return res.status(500).json({ error: err.message });
         }
 
+        // ✅ ถ้าไม่มี User นี้ในระบบ ให้สร้าง User ใหม่
         let userId = result.length > 0 ? result[0].id : null;
 
+        // ✅ บันทึกข้อความลง MySQL และส่งให้ทุก Client แบบ Realtime
         if (!userId) {
             db.query("INSERT INTO users (username) VALUES (?)", [username], (err, result) => {
                 if (err) {
