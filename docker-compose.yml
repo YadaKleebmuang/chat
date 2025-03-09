@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # 🌍 Node.js App
+  app:
+    container_name: app  # ✅ ตรวจสอบว่ามี container_name หรือไม่
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=chat_app
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # 🛢️ MySQL Database
+  db:
+    image: mysql:8
+    container_name: db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chat_app
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # 🖥️ phpMyAdmin Web Interface
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+
+volumes:
+  mysql_data:
